@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ULS Benchmark → IEP Goal Generator | DCPS Special Education</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Inter,sans-serif;background:#F1F5F9;color:#1E293B;min-height:100vh}
+
+  /* URL BAR */
+  .url-bar{background:#0F172A;padding:6px 20px;display:flex;align-items:center;gap:10px}
+  .url-pill{display:flex;align-items:center;gap:8px;background:#1E293B;border:1px solid #334155;border-radius:20px;padding:4px 14px;cursor:pointer}
+  .url-pill span{font-size:12px;color:#94A3B8;font-family:'Courier New',monospace}
+  .url-pill .lock{color:#60A5FA;font-size:11px}
+  .url-copy{margin-left:auto;font-size:11px;color:#475569;cursor:pointer;background:none;border:none;color:#60A5FA;font-size:12px}
+
+  /* HEADER */
+  header{background:#1E3A5F;padding:16px 24px}
+  .header-inner{max-width:880px;margin:0 auto;display:flex;align-items:center;gap:12px}
+  header h1{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.02em;margin:0}
+  header p{font-size:12px;color:#93C5FD;margin:2px 0 0}
+
+  /* STEPS */
+  .steps{display:flex;gap:8px;margin-left:auto}
+  .step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;background:rgba(255,255,255,.15);flex-shrink:0}
+  .step-dot.active{background:#3B82F6}
+  .step-dot.done{background:#22C55E}
+
+  /* MAIN */
+  main{max-width:880px;margin:0 auto;padding:26px 16px}
+
+  /* CARDS */
+  .card{background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;padding:24px}
+  .card h2{font-size:17px;font-weight:700;margin-bottom:4px}
+  .card p.sub{font-size:13px;color:#64748B;margin-bottom:20px}
+
+  /* FORM */
+  label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:5px}
+  input,select,textarea{width:100%;padding:9px 12px;border-radius:8px;font-size:14px;border:1.5px solid #E2E8F0;outline:none;font-family:inherit;background:#fff}
+  input:focus,select:focus,textarea:focus{border-color:#3B82F6}
+  .field{margin-bottom:15px}
+
+  /* DOMAIN BUTTONS */
+  .domain-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+  .domain-btn{padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #E2E8F0;background:#F8FAFC;color:#64748B;transition:all .15s}
+  .domain-btn.active{background:#1E3A5F;border-color:#1E3A5F;color:#fff}
+
+  /* BENCHMARK TABLE */
+  .bench-table{background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;overflow:hidden;margin-bottom:12px}
+  .bench-head{display:grid;grid-template-columns:2.4fr 1fr 1fr 1fr 64px;background:#1E3A5F;padding:9px 14px;gap:4px}
+  .bench-head span{font-size:11px;font-weight:700;color:#93C5FD;text-transform:uppercase;letter-spacing:.06em}
+  .bench-head span:not(:first-child){text-align:center}
+  .bench-row{display:grid;grid-template-columns:2.4fr 1fr 1fr 1fr 64px;padding:9px 14px;align-items:center;gap:4px;border-top:1px solid #F1F5F9}
+  .bench-row:nth-child(even){background:#FAFBFD}
+  .bench-row select{padding:5px 4px;font-size:12px;border-radius:7px;text-align:center}
+  .remove-btn{background:none;border:none;color:#CBD5E1;cursor:pointer;font-size:20px;line-height:1;width:100%;text-align:center}
+  .remove-btn:hover{color:#EF4444}
+
+  /* LEVEL BADGE */
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;white-space:nowrap}
+  .badge-pre{background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5}
+  .badge-em{background:#FEF3C7;color:#92400E;border:1px solid #FCD34D}
+  .badge-in{background:#DBEAFE;color:#1E40AF;border:1px solid #93C5FD}
+  .badge-pr{background:#DCFCE7;color:#166534;border:1px solid #86EFAC}
+  .badge-grew{background:#DCFCE7;color:#166534}
+  .badge-prof{background:#EDE9FE;color:#5B21B6}
+  .badge-flat{background:#FEF9C3;color:#854D0E}
+  .badge-reg{background:#FEE2E2;color:#991B1B}
+
+  /* BUTTONS */
+  .btn-primary{width:100%;padding:12px;border-radius:10px;font-size:15px;font-weight:700;background:#1E3A5F;color:#fff;border:none;cursor:pointer;transition:background .15s}
+  .btn-primary:hover{background:#1e4d8c}
+  .btn-primary:disabled{background:#94A3B8;cursor:not-allowed}
+  .btn-secondary{padding:10px 16px;border-radius:9px;font-size:13px;font-weight:600;background:#F1F5F9;border:1.5px solid #E2E8F0;color:#374151;cursor:pointer}
+  .btn-back{padding:7px 13px;border-radius:8px;font-size:13px;font-weight:600;background:#F1F5F9;border:1.5px solid #E2E8F0;color:#64748B;cursor:pointer}
+  .btn-save{padding:7px 13px;border-radius:8px;font-size:13px;font-weight:600;background:#EFF6FF;border:1.5px solid #BFDBFE;color:#1D4ED8;cursor:pointer;white-space:nowrap}
+  .btn-green{padding:10px 16px;border-radius:9px;font-size:13px;font-weight:600;background:#F0FDF4;border:1.5px solid #86EFAC;color:#166534;cursor:pointer}
+  .btn-print{padding:7px 15px;border-radius:8px;font-size:13px;font-weight:600;background:#1E3A5F;color:#fff;border:none;cursor:pointer}
+  .row-btns{display:flex;gap:10px;align-items:center}
+
+  /* SEARCH */
+  .search-box{width:100%;padding:9px 13px;border-radius:9px;font-size:13px;border:1.5px solid #E2E8F0;outline:none;margin-bottom:12px;background:#fff}
+
+  /* GOALS */
+  .goal-card{background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;padding:18px 20px;margin-bottom:14px}
+  .goal-card.priority{border-left:4px solid #EF4444}
+  .goal-card.medium{border-left:4px solid #3B82F6}
+  .goal-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
+  .goal-title{font-weight:700;font-size:15px}
+  .goal-meta{font-size:12px;color:#64748B;margin-top:3px}
+  .goal-text{font-size:14px;line-height:1.8;color:#374151;background:#F8FAFC;padding:12px 14px;border-radius:8px;margin-top:8px}
+
+  /* SAVED */
+  .saved-section{margin-top:30px;border-top:2px solid #E2E8F0;padding-top:22px}
+  .saved-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .saved-card{background:#fff;border:1.5px solid #E2E8F0;border-radius:10px;padding:13px 15px;margin-bottom:10px}
+  .saved-card-header{display:flex;justify-content:space-between;align-items:flex-start}
+
+  /* SUMMARY BAR */
+  .summary-bar{margin-top:10px;padding:9px 13px;background:#F0FDF4;border-radius:8px;font-size:13px;color:#166534}
+
+  /* LEGEND */
+  .legend{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:14px}
+
+  /* LOADING */
+  .loading{text-align:center;padding:56px 20px;color:#64748B}
+  .loading .icon{font-size:34px;margin-bottom:12px}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;background:#1E293B;color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.25);z-index:9999;display:flex;gap:10px;align-items:center;animation:fadeIn .2s}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* FOOTER */
+  footer{background:#1E293B;padding:16px 24px;margin-top:40px}
+  footer .inner{max-width:880px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  footer .brand{font-size:13px;font-weight:700;color:#fff}
+  footer .copy{font-size:12px;color:#475569}
+  footer a{color:#60A5FA;font-size:13px;text-decoration:none;font-weight:600}
+  footer a:hover{text-decoration:underline}
+
+  .hidden{display:none}
+  .flex-between{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+  .notice{font-size:12px;color:#94A3B8;margin-top:12px}
+</style>
+</head>
+<body>
+
+<!-- URL BAR -->
+<div class="url-bar">
+  <div class="url-pill" onclick="copyURL()">
+    <span class="lock">🔒</span>
+    <span id="urlText">www.dcps-iepgoals.com/benchmark-generator</span>
+  </div>
+  <button class="url-copy" onclick="copyURL()" title="Copy link">⎘ Copy link</button>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <span style="font-size:22px">📊</span>
+    <div style="flex:1">
+      <h1>ULS Benchmark → IEP Goal Generator</h1>
+      <p id="headerSub">DCPS Special Education · Pre-Emerging through Proficient</p>
+    </div>
+    <div class="steps">
+      <div class="step-dot active" id="dot1">1</div>
+      <div class="step-dot" id="dot2">2</div>
+      <div class="step-dot" id="dot3">3</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ── STEP 1: STUDENT INFO ───────────────────────────────────────── -->
+<div id="step1">
+  <div class="card" style="max-width:500px;margin:0 auto">
+    <h2>Student Information</h2>
+    <p class="sub">Enter details before adding benchmark scores.</p>
+    <div class="field"><label>Student Name</label><input id="sName" placeholder="e.g. Marcus T."></div>
+    <div class="field"><label>Grade</label><input id="sGrade" placeholder="e.g. 6th grade"></div>
+    <div class="field"><label>Teacher</label><input id="sTeacher" placeholder="e.g. Ms. Weeks"></div>
+    <div class="field">
+      <label>Domain</label>
+      <div class="domain-row" id="domainRow"></div>
+    </div>
+    <button class="btn-primary" onclick="goStep2()">Next: Enter Benchmark Scores →</button>
+  </div>
+</div>
+
+<!-- ── STEP 2: BENCHMARKS ─────────────────────────────────────────── -->
+<div id="step2" class="hidden">
+  <div class="flex-between">
+    <div>
+      <h2 style="font-size:17px;font-weight:700" id="step2Title">ELA Benchmarks</h2>
+      <p style="font-size:13px;color:#64748B;margin-top:3px" id="step2Sub">Select benchmarks and enter BOY/MOY/EOY scores.</p>
+    </div>
+    <button class="btn-back" onclick="goStep1()">← Back</button>
+  </div>
+
+  <div class="legend" id="legend">
+    <span class="badge badge-pre">Pre-Emerging</span>
+    <span class="badge badge-em">Emerging</span>
+    <span class="badge badge-in">Instructional</span>
+    <span class="badge badge-pr">Proficient</span>
+    <span style="font-size:12px;color:#94A3B8">← ULS performance levels</span>
+  </div>
+
+  <input class="search-box" id="benchSearch" placeholder="Search benchmarks…" oninput="filterBench()">
+
+  <div class="bench-table">
+    <div class="bench-head">
+      <span>Benchmark</span>
+      <span>BOY</span><span>MOY</span><span>EOY</span><span></span>
+    </div>
+    <div id="benchRows"></div>
+  </div>
+
+  <div class="row-btns">
+    <button class="btn-secondary" onclick="addRow()">+ Add Row</button>
+    <button class="btn-primary" id="genBtn" onclick="generateGoals()" style="flex:1" disabled>✨ Generate IEP Goals</button>
+  </div>
+  <div class="summary-bar hidden" id="summaryBar"></div>
+</div>
+
+<!-- ── STEP 3: GOALS ──────────────────────────────────────────────── -->
+<div id="step3" class="hidden">
+  <div class="flex-between">
+    <div>
+      <h2 style="font-size:17px;font-weight:700" id="step3Title">Generated IEP Goals</h2>
+      <p style="font-size:13px;color:#64748B;margin-top:3px" id="step3Sub"></p>
+    </div>
+    <button class="btn-back" onclick="goStep2()">← Edit Scores</button>
+  </div>
+  <div id="goalsList"></div>
+</div>
+
+<!-- ── SAVED ──────────────────────────────────────────────────────── -->
+<div class="saved-section hidden" id="savedSection">
+  <div class="saved-header">
+    <h3 style="font-size:16px;font-weight:700">⭐ Saved Goals (<span id="savedCount">0</span>)</h3>
+    <button class="btn-print" onclick="printAll()">🖨️ Print All</button>
+  </div>
+  <div id="savedList"><p style="color:#94A3B8;font-size:14px">Generate goals and click Save to collect them here.</p></div>
+</div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="inner">
+    <div>
+      <span class="brand">📊 ULS Benchmark → IEP Goal Generator</span>
+      <span class="copy" style="margin-left:12px">· DCPS Special Education</span>
+    </div>
+    <a href="https://dcps-iepgoals.com" target="_blank">🌐 dcps-iepgoals.com</a>
+  </div>
+</footer>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+// ── BENCHMARK DATA ────────────────────────────────────────────────────────────
+const BENCHMARKS = {
+  ELA: [
+    "Active Participation and Responsiveness: ELA","Environmental Print Match","Print Concepts Match",
+    "Phonological Awareness: Emerging Word Awareness","Letter Match","Environmental Print","Print Concepts",
+    "Phonological Awareness: Word Awareness","Syllable Awareness","Phonemic Awareness",
+    "Uppercase Letter Identification","Lowercase Letter Identification",
+    "Letter-Sound Correspondence: Consonants","Letter-Sound Correspondence: Vowels and Digraphs",
+    "Listening Comprehension 1","Listening Comprehension 2: Content Understanding",
+    "Decoding List 1: CVC and Digraphs","Decoding List 2: CCVC and Silent E",
+    "Decoding List 3: R-Controlled Vowels and Vowel Teams","Decoding List 4: Multisyllabic Words",
+    "Decoding List 5: Irregular Vowels and Ending Consonants",
+    "Spelling List 1","Spelling List 2","Spelling List 3","Spelling List 4","Spelling List 5",
+    "High-Frequency Words: List 1","High-Frequency Words: List 2","High-Frequency Words: List 3",
+    "High-Frequency Words: List 4","High-Frequency Words: List 5","High-Frequency Words: List 6",
+    "High-Frequency Words: List 7","High-Frequency Words: List 8","High-Frequency Words: List 9",
+    "High-Frequency Words: List 10","Vocabulary: Emerging Categorization and Opposites",
+    "Vocabulary 1: Sorting, Opposites and Describing","Vocabulary 2: Related and Similar Words",
+    "Vocabulary 3: Word Analysis","Vocabulary 4: Word Analysis (Morphology)","Vocabulary 5: Figurative Language",
+    "Reading Fluency 1: CVC Decodable Texts","Reading Fluency 2: Digraph Decodable Texts",
+    "Reading Fluency 3: Silent E Decodable Texts","Reading Fluency 4: Developing Decodable Texts",
+    "Reading Fluency 5: Progressing Decodable Texts","Reading Fluency: Basic Skills in Literature",
+    "Reading Fluency: Basic Skills in Informational Texts","Reading Fluency: More Skills in Literature",
+    "Reading Fluency: More Skills in Informational Texts","Reading Fluency: Explore Skills in Literature",
+    "Reading Fluency: Explore Skills in Informational Texts","Reading Fluency: Make Connections in Literature",
+    "Reading Fluency: Make Connections in Informational Texts","Reading Fluency: Dive Deeper in Literature",
+    "Reading Fluency: Dive Deeper in Informational Texts","Reading Fluency: Analyze Literature",
+    "Reading Fluency: Analyze Informational Texts",
+    "Reading Comprehension 1: CVC Decodable Texts","Reading Comprehension 2: Digraph Decodable Texts",
+    "Reading Comprehension 3: Silent E Decodable Texts","Reading Comprehension 4: Developing Decodable Texts",
+    "Reading Comprehension 5: Progressing Decodable Texts","Reading Comprehension: Basic Skills in Literature",
+    "Reading Comprehension: Basic Skills in Informational Texts","Reading Comprehension: More Skills in Literature",
+    "Reading Comprehension: More Skills in Informational Texts","Reading Comprehension: Explore Skills in Literature",
+    "Reading Comprehension: Explore Skills in Informational Texts","Reading Comprehension: Make Connections in Literature",
+    "Reading Comprehension: Make Connections in Informational Texts","Reading Comprehension: Dive Deeper in Literature",
+    "Reading Comprehension: Dive Deeper in Informational Texts","Reading Comprehension: Analyze Literature",
+    "Reading Comprehension: Analyze Informational Texts"
+  ],
+  Writing: [
+    "Emerging Writing: Participation and Responsiveness","Writing Conventions 1: Foundations",
+    "Writing Conventions 2","Writing Conventions 3: Sentence Structure","Writing Process: Beginning Research",
+    "Narrative Writing 1","Narrative Writing 2","Narrative Writing 3",
+    "Opinion Writing 1","Opinion Writing 2","Opinion Writing 3",
+    "Explanatory Writing 1","Explanatory Writing 2","Explanatory Writing 3"
+  ],
+  Math: [
+    "Active Participation and Responsiveness: Math",
+    "Emerging Spatial Relationships: Using Positional Vocabulary","Emerging Shapes","Colors: Match, Sort and Identify",
+    "Spatial Relationships: Using Positional Vocabulary","Shapes 1: Match, Sort and Identify Basic Shapes",
+    "Patterns 1: Non-Numeric Patterns","Emerging Counting and Cardinality",
+    "Counting and Number Identification (0-10)","Counting Objects (0-10)","Comparing and Ordering Sets (0-10)",
+    "Counting and Number Identification (0-100)","Place Value 1: Tens and Ones","Place Value 2: Hundreds",
+    "Comparing and Rounding Multi-Digit Numbers","Emerging Number Calculation",
+    "Composing and Decomposing Sets Within 10","Addition and Subtraction 1: Word Problems Within 10",
+    "Addition and Subtraction 2: Problems Within 20","Addition and Subtraction 3: Problems Within 100",
+    "Addition and Subtraction 4: Problems within 1000","Multiplication & Division 1: Equal Groups and Arrays",
+    "Multiplication & Division 2: Facts & Word Problems Within 100",
+    "Multiplication and Division 3: Multi-Digit by 1-Digit","Emerging Geometry",
+    "Shapes 2: Characteristics of 2D Shapes","Shapes 3: Characteristics of 3D Shapes",
+    "Shapes 4: Working With Similar and Congruent Shapes",
+    "Measuring Shapes 1: Perimeter, Area and Volume (Squares & rectangles)",
+    "Points, Lines and Line Segments","Angles",
+    "Emerging Measurement 1: Vocabulary and Using Nonstandard Units",
+    "Measurement 1: Vocabulary & Using Nonstandard Units","Measurement 2: Length and Standard Units",
+    "Measurement 3: Volume, Temperature and Weight",
+    "Emerging Data: Categorizing Data and Pictographs","Data 1: Categorizing Data and Pictographs",
+    "Data 2: Advanced Picture Graphs, Bar and Line Plots","Data 3: Pie Charts, Line Graphs and Everyday Data",
+    "Data 4: Analyzing Data","Emerging Time","Time 1: Schedule, Calendar and Time Concepts",
+    "Time 2: Hour and Half-Hour","Time 3: Quarter-Hour and 5-min intervals","Time 4: Calculating Elapsed Time",
+    "Time 5: Everyday Time (Calendars and Schedules)","Emerging Money","Money 1: Identify Bills, Coins & Signs",
+    "Money 2: Value of Coins & Bills","Money 3: Add & Subtract Like Coins and Bills",
+    "Money 4: Advanced Money Skills","Money 5: Purchasing Skills","Money 6: Advanced Purchasing Skills",
+    "Emerging Fractions","Fractions 1: Represent Unit Fractions","Fractions 2: Represent and Compare Unit Fractions",
+    "Fractions 3: Add and Subtract Fractions","Ratios","Decimals 1: Represent and Compare Decimals",
+    "Emerging Algebraic Thinking","Patterns 2: Arithmetic Sequence (+ or -)",
+    "Algebraic Thinking 1: Finding the Unknown","Algebraic Thinking 2: Solve for an Unknown Variable (+ and -)",
+    "Algebraic Thinking 3: Solve for an Unknown Variable (x and +)",
+    "Algebraic Thinking 4: Two-Step Equations and Inequalities"
+  ],
+  Science: [
+    "Elementary Science","Intermediate Science","Middle School Earth and Life Science",
+    "Middle School Physical Science","High School Biology","High School Physical Science"
+  ],
+  "Social Studies": [
+    "Elementary Social Studies","Intermediate Social Studies",
+    "Middle School World History and Geography","Middle School School U.S. History and Economics",
+    "High School American Government","High School Economics","High School U.S. History","High School World History"
+  ]
+};
+
+const LEVELS = ["Pre-Emerging","Emerging","Instructional","Proficient"];
+const LEVEL_VAL = {"Pre-Emerging":0,"Emerging":1,"Instructional":2,"Proficient":3};
+const LEVEL_CLS = {"Pre-Emerging":"badge-pre","Emerging":"badge-em","Instructional":"badge-in","Proficient":"badge-pr"};
+const LEVEL_SEL_STYLE = {
+  "Pre-Emerging":"background:#FEE2E2;color:#991B1B;border:1.5px solid #FCA5A5;font-weight:700",
+  "Emerging":"background:#FEF3C7;color:#92400E;border:1.5px solid #FCD34D;font-weight:700",
+  "Instructional":"background:#DBEAFE;color:#1E40AF;border:1.5px solid #93C5FD;font-weight:700",
+  "Proficient":"background:#DCFCE7;color:#166534;border:1.5px solid #86EFAC;font-weight:700",
+  "":"background:#fff;color:#94A3B8;border:1.5px solid #E2E8F0"
+};
+
+let currentDomain = "ELA";
+let rows = [];
+let savedGoals = [];
+let toastTimer;
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(function init() {
+  const dr = document.getElementById("domainRow");
+  Object.keys(BENCHMARKS).forEach(d => {
+    const btn = document.createElement("button");
+    btn.className = "domain-btn" + (d === "ELA" ? " active" : "");
+    btn.textContent = d;
+    btn.onclick = () => selectDomain(d);
+    dr.appendChild(btn);
+  });
+  addRow();
+})();
+
+function selectDomain(d) {
+  currentDomain = d;
+  document.querySelectorAll(".domain-btn").forEach(b => b.classList.toggle("active", b.textContent === d));
+}
+
+// ── STEP NAV ──────────────────────────────────────────────────────────────────
+function goStep1() { show("step1"); hideDots(); dot(1,"active"); }
+function goStep2() {
+  updateStep2Header();
+  show("step2"); show("savedSection");
+  dot(1,"done"); dot(2,"active"); dot(3,"");
+  renderRows();
+}
+function goStep3() {
+  show("step3"); show("savedSection");
+  dot(1,"done"); dot(2,"done"); dot(3,"active");
+}
+
+function show(id) {
+  ["step1","step2","step3"].forEach(s => document.getElementById(s).classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+}
+function hideDots() { [1,2,3].forEach(n => dot(n,"")); }
+function dot(n, state) {
+  const el = document.getElementById("dot"+n);
+  el.className = "step-dot" + (state ? " "+state : "");
+  el.textContent = state === "done" ? "✓" : n;
+}
+
+function goStep2fromStep1() {
+  updateStep2Header();
+  show("step2"); show("savedSection");
+  dot(1,"done"); dot(2,"active"); dot(3,"");
+  renderRows();
+}
+
+function updateStep2Header() {
+  const name = document.getElementById("sName").value;
+  const teacher = document.getElementById("sTeacher").value;
+  const grade = document.getElementById("sGrade").value;
+  document.getElementById("step2Title").textContent = `${currentDomain} Benchmarks — ${name || "Student"}`;
+  document.getElementById("step2Sub").textContent = [teacher, grade].filter(Boolean).join(" · ") + (teacher||grade ? " · " : "") + "Select benchmarks and enter BOY/MOY/EOY scores.";
+  document.getElementById("headerSub").textContent = `DCPS Special Education · ${BENCHMARKS[currentDomain].length} ${currentDomain} benchmarks loaded · Pre-Emerging through Proficient`;
+}
+
+function goStep2() { goStep2fromStep1(); }
+
+// override goStep2 for back button
+document.querySelector("#step3 .btn-back").onclick = () => {
+  show("step2"); dot(2,"active"); dot(3,"");
+};
+
+// ── ROWS ──────────────────────────────────────────────────────────────────────
+function addRow() {
+  rows.push({ benchmark:"", BOY:"", MOY:"", EOY:"" });
+  renderRows();
+}
+
+function renderRows() {
+  const used = new Set(rows.map(r=>r.benchmark).filter(Boolean));
+  const q = (document.getElementById("benchSearch")||{value:""}).value.toLowerCase();
+  const avail = BENCHMARKS[currentDomain].filter(b => !q || b.toLowerCase().includes(q));
+  const container = document.getElementById("benchRows");
+  container.innerHTML = "";
+
+  rows.forEach((row, i) => {
+    const growth = calcGrowth(row);
+    const div = document.createElement("div");
+    div.className = "bench-row";
+
+    // Benchmark select
+    let opts = `<option value="">Select benchmark…</option>`;
+    avail.forEach(b => {
+      const disabled = used.has(b) && b !== row.benchmark ? "disabled" : "";
+      opts += `<option value="${b}" ${b===row.benchmark?"selected":""} ${disabled}>${b}</option>`;
+    });
+    if (row.benchmark && !avail.includes(row.benchmark))
+      opts += `<option value="${row.benchmark}" selected>${row.benchmark}</option>`;
+
+    // Score selects
+    let scoreCols = ["BOY","MOY","EOY"].map(p => {
+      const val = row[p];
+      const st = LEVEL_SEL_STYLE[val] || LEVEL_SEL_STYLE[""];
+      let sopts = `<option value="">—</option>` + LEVELS.map(l=>`<option value="${l}" ${l===val?"selected":""}>${l}</option>`).join("");
+      return `<td style="text-align:center;padding:0 3px"><select style="${st};width:100%;padding:5px 3px;border-radius:7px;font-size:11px;outline:none" onchange="updateRow(${i},'${p}',this.value)">${sopts}</select></td>`;
+    }).join("");
+
+    // Growth badge
+    const gMap = {grew:"badge-grew ↑ Grew",proficient:"badge-prof ★ Proficient",flat:"badge-flat → Flat",regressed:"badge-reg ↓ Regressed"};
+    const gbadge = growth ? `<span class="badge ${gMap[growth].split(" ")[0]}">${gMap[growth].slice(gMap[growth].indexOf(" ")+1)}</span>` : "";
+
+    div.innerHTML = `
+      <div style="padding-right:8px">
+        <select style="width:100%;padding:6px 8px;border-radius:7px;font-size:12px;border:1.5px solid #E2E8F0;background:#fff;outline:none" onchange="updateRow(${i},'benchmark',this.value)">${opts}</select>
+      </div>
+      <div style="text-align:center;padding:0 3px"><select style="${(LEVEL_SEL_STYLE[row.BOY]||LEVEL_SEL_STYLE[''])};width:100%;padding:5px 3px;border-radius:7px;font-size:11px;outline:none" onchange="updateRow(${i},'BOY',this.value)"><option value="">—</option>${LEVELS.map(l=>`<option value="${l}" ${l===row.BOY?"selected":""}>${l}</option>`).join("")}</select></div>
+      <div style="text-align:center;padding:0 3px"><select style="${(LEVEL_SEL_STYLE[row.MOY]||LEVEL_SEL_STYLE[''])};width:100%;padding:5px 3px;border-radius:7px;font-size:11px;outline:none" onchange="updateRow(${i},'MOY',this.value)"><option value="">—</option>${LEVELS.map(l=>`<option value="${l}" ${l===row.MOY?"selected":""}>${l}</option>`).join("")}</select></div>
+      <div style="text-align:center;padding:0 3px"><select style="${(LEVEL_SEL_STYLE[row.EOY]||LEVEL_SEL_STYLE[''])};width:100%;padding:5px 3px;border-radius:7px;font-size:11px;outline:none" onchange="updateRow(${i},'EOY',this.value)"><option value="">—</option>${LEVELS.map(l=>`<option value="${l}" ${l===row.EOY?"selected":""}>${l}</option>`).join("")}</select></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px">${gbadge}<button class="remove-btn" onclick="removeRow(${i})">×</button></div>
+    `;
+    container.appendChild(div);
+  });
+
+  updateSummary();
+}
+
+function updateRow(i, field, val) {
+  rows[i][field] = val;
+  renderRows();
+}
+
+function removeRow(i) {
+  rows.splice(i,1);
+  renderRows();
+}
+
+function filterBench() { renderRows(); }
+
+function calcGrowth(row) {
+  if (!row.benchmark || (!row.BOY && !row.MOY && !row.EOY)) return null;
+  if (row.BOY==="Proficient"||row.MOY==="Proficient") return "proficient";
+  const b=LEVEL_VAL[row.BOY],m=LEVEL_VAL[row.MOY],e=LEVEL_VAL[row.EOY];
+  if(b!=null&&e!=null&&e>b)return"grew";
+  if(b!=null&&m!=null&&m>b)return"grew";
+  if(m!=null&&e!=null&&e>m)return"grew";
+  if(b!=null&&e!=null&&e<b)return"regressed";
+  return"flat";
+}
+
+function getLatest(row) { return row.EOY||row.MOY||row.BOY||""; }
+
+function validRows() { return rows.filter(r=>r.benchmark&&(r.BOY||r.MOY||r.EOY)); }
+
+function updateSummary() {
+  const vr = validRows();
+  const btn = document.getElementById("genBtn");
+  const bar = document.getElementById("summaryBar");
+  btn.disabled = vr.length === 0;
+  btn.textContent = `✨ Generate IEP Goals (${vr.length} benchmark${vr.length!==1?"s":""})`;
+  if (vr.length > 0) {
+    const grew = vr.filter(r=>["grew","proficient"].includes(calcGrowth(r))).length;
+    const flat = vr.filter(r=>calcGrowth(r)==="flat").length;
+    const reg  = vr.filter(r=>calcGrowth(r)==="regressed").length;
+    bar.textContent = `Growth summary: ${grew} with growth · ${flat} flat · ${reg} regressed`;
+    bar.classList.remove("hidden");
+  } else {
+    bar.classList.add("hidden");
+  }
+}
+
+// ── GENERATE ──────────────────────────────────────────────────────────────────
+async function generateGoals() {
+  const vr = validRows();
+  if (!vr.length) { showToast("Add at least one benchmark with a score."); return; }
+
+  goStep3();
+  const name = document.getElementById("sName").value;
+  const grade = document.getElementById("sGrade").value;
+  const teacher = document.getElementById("sTeacher").value;
+  document.getElementById("step3Title").textContent = `Generated IEP Goals — ${name || "Student"}`;
+  document.getElementById("step3Sub").textContent = `${currentDomain} · ${vr.length} benchmarks analyzed`;
+
+  const gl = document.getElementById("goalsList");
+  gl.innerHTML = `<div class="loading"><div class="icon">⏳</div><p style="font-size:15px;font-weight:600">Analyzing benchmark data…</p><p style="font-size:13px;color:#94A3B8;margin-top:6px">Reading ULS growth patterns · Applying DCPS IEP format</p></div>`;
+
+  const lines = vr.map(r=>`  • ${r.benchmark}: ${["BOY","MOY","EOY"].filter(p=>r[p]).map(p=>`${p}: ${r[p]}`).join(", ")} [${(calcGrowth(r)||"").toUpperCase()}]`).join("\n");
+  const grewList = vr.filter(r=>["grew","proficient"].includes(calcGrowth(r)));
+  const needList = vr.filter(r=>["flat","regressed"].includes(calcGrowth(r)));
+
+  const prompt = `You are an expert DCPS special education teacher writing annual IEP goals directly from ULS benchmark data.
+
+STUDENT:
+- Name: ${name || "[Student]"}
+- Grade: ${grade || "not specified"}
+- Teacher: ${teacher || "not specified"}
+- Domain: ${currentDomain}
+
+ULS FRAMEWORK:
+Four levels: Pre-Emerging → Emerging → Instructional → Proficient.
+BOY (Aug–Oct), MOY (Nov–May 8), EOY (May 11+).
+If Proficient, district advances student to next benchmark — counts as one full level of growth.
+
+BENCHMARK DATA:
+${lines}
+
+GREW: ${grewList.map(r=>`${r.benchmark} (now ${getLatest(r)})`).join(", ")||"none"}
+FLAT/REGRESSED: ${needList.map(r=>`${r.benchmark} (${getLatest(r)}, ${calcGrowth(r)})`).join(", ")||"none"}
+
+Write 2–3 SMART annual IEP goals. Prioritize flat/regressed benchmarks. Reference exact benchmark names and current ULS levels. DCPS format: Given [condition], [Student] will [behavior] with [criterion] across [trials] as measured by [method]. One paragraph each.
+
+Return ONLY valid JSON array — no markdown:
+[{"title":"short title","benchmark":"exact benchmark name","currentLevel":"current ULS level","priority":"high or medium","goal":"full SMART goal text"}]`;
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000, messages:[{role:"user",content:prompt}] })
+    });
+    const data = await res.json();
+    const raw = data.content?.map(b=>b.text||"").join("")||"[]";
+    const goals = JSON.parse(raw.replace(/```json|```/g,"").trim());
+    renderGoals(goals);
+  } catch(e) {
+    gl.innerHTML = `<div style="color:#EF4444;padding:20px">Could not generate goals. Please check your connection and try again.</div>`;
+  }
+}
+
+function renderGoals(goals) {
+  const gl = document.getElementById("goalsList");
+  gl.innerHTML = "";
+  goals.forEach(g => {
+    const div = document.createElement("div");
+    div.className = `goal-card ${g.priority==="high"?"priority":"medium"}`;
+    const lvlBadge = g.currentLevel ? `<span class="badge ${LEVEL_CLS[g.currentLevel]||""}" style="margin-left:6px">${g.currentLevel}</span>` : "";
+    div.innerHTML = `
+      <div class="goal-header">
+        <div>
+          <div class="goal-title">${g.title} ${g.priority==="high"?'<span class="badge badge-pre" style="font-size:11px;margin-left:6px">Priority</span>':""}</div>
+          <div class="goal-meta">${g.benchmark}${lvlBadge}</div>
+        </div>
+        <button class="btn-save" onclick="saveGoal(${JSON.stringify(JSON.stringify(g))})">⭐ Save</button>
+      </div>
+      <div class="goal-text">${g.goal}</div>
+    `;
+    gl.appendChild(div);
+  });
+
+  const actions = document.createElement("div");
+  actions.style.cssText = "display:flex;gap:10px;margin-top:4px";
+  actions.innerHTML = `
+    <button class="btn-secondary" onclick="generateGoals()">🔄 Regenerate</button>
+    <button class="btn-green" onclick="resetAll()">+ New Student</button>
+  `;
+  gl.appendChild(actions);
+  const note = document.createElement("p");
+  note.className = "notice";
+  note.textContent = "Always review AI-generated goals against the student's full evaluation data before finalizing in the IEP.";
+  gl.appendChild(note);
+}
+
+function saveGoal(jsonStr) {
+  const g = JSON.parse(jsonStr);
+  const name = document.getElementById("sName").value || "[Student]";
+  savedGoals.unshift({ ...g, student: name, domain: currentDomain, savedAt: new Date().toLocaleDateString(), id: Date.now() });
+  renderSaved();
+  showToast(`"${g.title}" saved!`);
+}
+
+function renderSaved() {
+  document.getElementById("savedCount").textContent = savedGoals.length;
+  const list = document.getElementById("savedList");
+  if (!savedGoals.length) { list.innerHTML = `<p style="color:#94A3B8;font-size:14px">Generate goals and click Save to collect them here.</p>`; return; }
+  list.innerHTML = "";
+  savedGoals.forEach(g => {
+    const div = document.createElement("div");
+    div.className = "saved-card";
+    div.innerHTML = `
+      <div class="saved-card-header">
+        <div>
+          <span style="font-weight:700;font-size:14px">${g.title}</span>
+          <span style="font-size:12px;color:#94A3B8;margin-left:8px">${g.student} · ${g.domain} · ${g.savedAt}</span>
+        </div>
+        <button class="remove-btn" style="width:auto;font-size:18px" onclick="removeSaved(${g.id})">×</button>
+      </div>
+      <p style="margin:7px 0 0;font-size:13px;color:#374151;line-height:1.75">${g.goal}</p>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function removeSaved(id) {
+  savedGoals = savedGoals.filter(g => g.id !== id);
+  renderSaved();
+}
+
+function printAll() {
+  if (!savedGoals.length) { showToast("No saved goals to print."); return; }
+  const win = window.open("","_blank");
+  win.document.write(`<html><head><title>IEP Goals</title><style>
+    body{font-family:Georgia,serif;padding:32px;color:#1E293B;max-width:720px;margin:0 auto}
+    h1{font-size:20px;border-bottom:3px solid #1E3A5F;padding-bottom:8px;margin-bottom:24px}
+    .card{border:1px solid #E2E8F0;border-radius:8px;padding:18px;margin-bottom:18px;break-inside:avoid}
+    .meta{font-size:11px;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+    .title{font-size:16px;font-weight:700;margin-bottom:3px}
+    .level{font-size:12px;color:#64748B;margin-bottom:10px}
+    .text{font-size:14px;line-height:1.8}
+  </style></head><body>
+  <h1>IEP Goals — Generated from ULS Benchmark Data · ${new Date().toLocaleDateString()}</h1>
+  ${savedGoals.map(g=>`<div class="card"><div class="meta">${g.student} · ${g.domain} · ${g.savedAt}</div><div class="title">${g.title}</div><div class="level">Benchmark: ${g.benchmark}${g.currentLevel?` · Current Level: ${g.currentLevel}`:""}</div><div class="text">${g.goal}</div></div>`).join("")}
+  </body></html>`);
+  win.document.close(); win.print();
+}
+
+function resetAll() {
+  rows = [{ benchmark:"", BOY:"", MOY:"", EOY:"" }];
+  document.getElementById("sName").value = "";
+  document.getElementById("sGrade").value = "";
+  document.getElementById("sTeacher").value = "";
+  selectDomain("ELA");
+  goStep1();
+  hideDots(); dot(1,"active");
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.innerHTML = `<span style="color:#4ADE80">✓</span> ${msg} <button onclick="this.parentElement.classList.add('hidden')" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:16px;margin-left:6px">×</button>`;
+  t.classList.remove("hidden");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.add("hidden"), 3000);
+}
+
+function copyURL() {
+  navigator.clipboard.writeText("https://www.dcps-iepgoals.com/benchmark-generator").then(() => showToast("Link copied!"));
+}
+
+// Override the "Next" button
+document.querySelector("#step1 .btn-primary").onclick = goStep2fromStep1;
+document.querySelector("#step2 .btn-back").onclick = goStep1;
+</script>
+</body>
+</html>
